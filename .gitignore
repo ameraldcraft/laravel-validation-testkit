@@ -1,0 +1,16 @@
+/vendor
+
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+
+composer.phar
+composer.lock
+.phpunit.result.cache
+/phpunit.xml
+/.idea
+/.vscode

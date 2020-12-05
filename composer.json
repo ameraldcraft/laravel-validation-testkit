@@ -1,0 +1,32 @@
+{
+    "name": "amerald/laravel-validation-testkit",
+    "description": "Test form requests in no time",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Illia Balia",
+            "email": "illia.balia@ameraldcraft.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1",
+        "laravel/framework": ">=5.5"
+    },
+    "require-dev": {
+        "mockery/mockery": "*",
+        "orchestra/testbench": "*",
+        "phpunit/phpunit": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Amerald\\LaravelValidationTestkit\\": "app/",
+            "Amerald\\LaravelValidationTestkit\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
