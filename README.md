@@ -2,7 +2,9 @@
 Test form requests with ease and in no time
 
 ## Installation
-`composer require amerald/laravel-validation-testkit`
+```
+composer require amerald/laravel-validation-testkit
+```
 
 ## Usage
 ```php
