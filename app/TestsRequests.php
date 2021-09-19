@@ -80,10 +80,14 @@ trait TestsRequests
      */
     public function getDataSetAsString($includeData = true): string
     {
+        $dataSet = parent::getDataSetAsString($includeData);
         $input = $this->getProvidedData();
-        $expectationName = array_keys($input)[0];
-        $dataSetName = parent::getDataSetAsString($includeData);
 
-        return preg_replace('/#\d+/', '"' . $expectationName . '"', $dataSetName);
+        if (!empty($input) && array_values($input)[0] instanceof Expectation) {
+            $expectationName = array_keys($input)[0];
+            $dataSet = preg_replace('/#\d+/', '"' . $expectationName . '"', $dataSet);
+        }
+
+        return $dataSet;
     }
 }
