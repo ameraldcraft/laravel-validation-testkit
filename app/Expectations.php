@@ -2,6 +2,7 @@
 
 namespace Amerald\LaravelValidationTestkit;
 
+use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
@@ -57,23 +58,23 @@ class Expectations
      */
     private function buildExpectationName(string $modifier, string $field = null, $value = null)
     {
-        if (!Str::startsWith($this->expectationName, 'request')) {
-            $this->expectationName = 'request';
-        }
+        // if (!Str::startsWith($this->expectationName, 'request')) {
+        //     $this->expectationName = 'request';
+        // }
 
         if (in_array($modifier, ['with', 'without'])) {
-            if (Str::contains($this->expectationName, $modifier)) {
-                $this->expectationName .= ' and';
+            if (Str::contains($this->expectationName ?? '', $modifier)) {
+                $this->expectationName .= ',';
             }
         }
 
         $this->expectationName .= ' ' . $modifier;
 
         if ($field) {
-            $this->expectationName .= " '{$field}' field";
+            $this->expectationName .= " '{$field}'";
         }
 
-        if ($value) {
+        if ($value && !is_callable($value)) {
             if (
                 (is_object($value) && !method_exists($value, '__toString'))
                 || is_array($value)
@@ -81,7 +82,7 @@ class Expectations
                 $value = json_encode($value);
             }
 
-            $this->expectationName .= " equal to '{$value}'";
+            $this->expectationName .= " equal to '" . Str::lower($value) . "'";
         }
     }
 
@@ -95,15 +96,11 @@ class Expectations
      */
     public function with(string $field, $value): self
     {
-        if (is_callable($value)) {
-            $value = $value($this);
-        }
-
         /*
          * Very convenient for failure tests.
          * $payload->with('name', 'not:string')->shouldFail()
          */
-        if (Str::startsWith($value, 'not:')) {
+        if (!is_callable($value) && Str::startsWith($value, 'not:')) {
             $type = last(explode('not:', $value));
 
             if ($type === 'string') {
@@ -167,7 +164,7 @@ class Expectations
             : 'should fail');
 
         $dataSet = [
-            $this->expectationName => new Expectation($this->input, $shouldPass),
+            trim($this->expectationName) => new Expectation($this->input, $shouldPass),
         ];
         $this->expectationName = null;
         $this->input = $this->originalInput;

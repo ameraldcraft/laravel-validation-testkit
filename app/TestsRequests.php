@@ -68,8 +68,14 @@ trait TestsRequests
     {
         try {
             $expectation = $expectation();
+            $input = $expectation->input();
+
+            array_walk($input, function (&$value) {
+                $value = $value instanceof Closure ? $value(isset($this->faker) ? $this->faker : null) : $value;
+            });
+
             $request = static::request();
-            $request = new $request($expectation->input(), $expectation->input());
+            $request = new $request($input, $input);
 
             $request->validate($request->rules());
             $passed = true;
