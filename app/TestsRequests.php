@@ -49,6 +49,7 @@ trait TestsRequests
         $request = new Expectations(static::input());
         $expectations = [];
 
+        /** @var array $expectation */
         foreach (static::expectations($request) as $expectation) {
             $name = array_keys($expectation)[0];
             $expectation = array_values($expectation)[0];
@@ -71,7 +72,7 @@ trait TestsRequests
             $input = $expectation->input();
 
             array_walk($input, function (&$value) {
-                $value = $value instanceof Closure ? $value(isset($this->faker) ? $this->faker : null) : $value;
+                $value = $value instanceof Closure ? $value($this) : $value;
             });
 
             $request = static::request();
