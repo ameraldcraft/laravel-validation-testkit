@@ -2,7 +2,9 @@
 
 namespace Amerald\LaravelValidationTestkit;
 
+use Closure;
 use Illuminate\Validation\ValidationException;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 trait TestsRequests
 {
@@ -11,7 +13,7 @@ trait TestsRequests
      *
      * @return string
      */
-    abstract protected function request(): string;
+    abstract protected static function request(): string;
 
     /**
      * Input to be validated.
@@ -20,7 +22,7 @@ trait TestsRequests
      *
      * @return array
      */
-    abstract protected function input(): array;
+    abstract protected static function input(): array;
 
     /**
      * Define validation expectations.
@@ -35,30 +37,38 @@ trait TestsRequests
      * @param  Expectations  $request
      * @return Expectation[]
      */
-    abstract protected function expectations(Expectations $request): array;
+    abstract protected static function expectations(Expectations $request): array;
 
     /**
      * Provide test with the expectations.
      *
      * @return array
      */
-    public function provideExpectations(): array
+    public static function provideExpectations(): array
     {
-        $request = new Expectations($this->input());
+        $request = new Expectations(static::input());
+        $expectations = [];
 
-        return $this->expectations($request);
+        foreach (static::expectations($request) as $expectation) {
+            $name = array_keys($expectation)[0];
+            $expectation = array_values($expectation)[0];
+            $expectations[$name] = [fn() => $expectation];
+        }
+
+        return $expectations;
     }
 
     /**
      * Test request rules.
      *
-     * @dataProvider provideExpectations
-     * @param  Expectation  $expectation
+     * @param  Closure  $expectation
      */
-    public function testRequest(Expectation $expectation)
+    #[DataProvider('provideExpectations')]
+    public function testRequest(Closure $expectation)
     {
         try {
-            $request = $this->request();
+            $expectation = $expectation();
+            $request = static::request();
             $request = new $request($expectation->input(), $expectation->input());
 
             $request->validate($request->rules());
@@ -70,24 +80,5 @@ trait TestsRequests
         }
 
         $this->assertEquals($expectation->shouldPass(), $passed ?? false, $message ?? '');
-    }
-
-    /**
-     * Override PHPUnit getDataSetAsString() method to display custom failure messages.
-     *
-     * @param  bool  $includeData
-     * @return string
-     */
-    public function getDataSetAsString($includeData = true): string
-    {
-        $dataSet = parent::getDataSetAsString($includeData);
-        $input = $this->getProvidedData();
-
-        if (!empty($input) && array_values($input)[0] instanceof Expectation) {
-            $expectationName = array_keys($input)[0];
-            $dataSet = preg_replace('/#\d+/', '"' . $expectationName . '"', $dataSet);
-        }
-
-        return $dataSet;
     }
 }

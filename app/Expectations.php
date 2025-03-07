@@ -57,8 +57,8 @@ class Expectations
      */
     private function buildExpectationName(string $modifier, string $field = null, $value = null)
     {
-        if (!Str::startsWith($this->expectationName, 'Request')) {
-            $this->expectationName = 'Request';
+        if (!Str::startsWith($this->expectationName, 'request')) {
+            $this->expectationName = 'request';
         }
 
         if (in_array($modifier, ['with', 'without'])) {
