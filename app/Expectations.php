@@ -3,6 +3,7 @@
 namespace Amerald\LaravelValidationTestkit;
 
 use Closure;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -96,7 +97,7 @@ class Expectations
         }
         $field = preg_replace('/\.\*/', 0, $field);
 
-        $this->with[$field] = $value;
+        Arr::set($this->with, $field, $value);
 
         return $this;
     }
