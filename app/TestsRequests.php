@@ -13,7 +13,7 @@ trait TestsRequests
      *
      * @return string
      */
-    abstract protected static function request(): string;
+    abstract protected function request(): string;
 
     /**
      * Input to be validated.
@@ -22,7 +22,7 @@ trait TestsRequests
      *
      * @return array
      */
-    abstract protected static function input(): array;
+    abstract protected function input(): array;
 
     /**
      * Define validation expectations.
@@ -46,14 +46,14 @@ trait TestsRequests
      */
     public static function provideExpectations(): array
     {
-        $request = new Expectations(static::input());
+        $request = new Expectations();
         $expectations = [];
 
         /** @var array $expectation */
         foreach (static::expectations($request) as $expectation) {
             $name = array_keys($expectation)[0];
             $expectation = array_values($expectation)[0];
-            $expectations[$name] = [fn() => $expectation];
+            $expectations[$name] = $expectation;
         }
 
         return $expectations;
@@ -68,12 +68,8 @@ trait TestsRequests
     public function testRequest(Closure $expectation)
     {
         try {
-            $expectation = $expectation();
+            $expectation = $expectation($this->input(), $this);
             $input = $expectation->input();
-
-            array_walk($input, function (&$value) {
-                $value = $value instanceof Closure ? $value($this) : $value;
-            });
 
             $request = static::request();
             $request = new $request($input, $input);
