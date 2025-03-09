@@ -141,7 +141,7 @@ class Expectations
 
         $expectation = function (array $input, TestCase $test) use ($shouldPass, $with, $without) {
             foreach ($without as $field) {
-                unset($input[$field]);
+                Arr::forget($input, $field);
             }
 
             foreach ($with as $fied => $value) {
