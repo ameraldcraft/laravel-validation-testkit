@@ -2,40 +2,18 @@
 
 namespace Amerald\LaravelValidationTestkit;
 
+use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Tests\TestCase;
 
 class Expectations
 {
-    /**
-     * Mutable input.
-     *
-     * @var array $input
-     */
-    private $input;
+    private array $with = [];
 
-    /**
-     * Original (immutable) input.
-     *
-     * @var array $originalInput
-     */
-    private $originalInput;
+    private array $without = [];
 
-    /**
-     * @var string $expectationName
-     */
-    private $expectationName;
-
-    /**
-     * Expectations constructor.
-     *
-     * @param  array  $input
-     */
-    public function __construct(array $input)
-    {
-        $this->originalInput = $input;
-        $this->input = $input;
-    }
+    private string $expectationName = '';
 
     /**
      * Automatically build expectation name based on fluent method names.
@@ -57,23 +35,19 @@ class Expectations
      */
     private function buildExpectationName(string $modifier, string $field = null, $value = null)
     {
-        if (!Str::startsWith($this->expectationName, 'Request')) {
-            $this->expectationName = 'Request';
-        }
-
         if (in_array($modifier, ['with', 'without'])) {
-            if (Str::contains($this->expectationName, $modifier)) {
-                $this->expectationName .= ' and';
+            if (Str::contains($this->expectationName ?? '', $modifier)) {
+                $this->expectationName .= ',';
             }
         }
 
         $this->expectationName .= ' ' . $modifier;
 
         if ($field) {
-            $this->expectationName .= " '{$field}' field";
+            $this->expectationName .= " '{$field}'";
         }
 
-        if ($value) {
+        if ($value && !is_callable($value)) {
             if (
                 (is_object($value) && !method_exists($value, '__toString'))
                 || is_array($value)
@@ -81,7 +55,7 @@ class Expectations
                 $value = json_encode($value);
             }
 
-            $this->expectationName .= " equal to '{$value}'";
+            $this->expectationName .= " equal to '" . Str::lower($value) . "'";
         }
     }
 
@@ -95,15 +69,11 @@ class Expectations
      */
     public function with(string $field, $value): self
     {
-        if (is_callable($value)) {
-            $value = $value($this);
-        }
-
         /*
          * Very convenient for failure tests.
          * $payload->with('name', 'not:string')->shouldFail()
          */
-        if (Str::startsWith($value, 'not:')) {
+        if (!is_callable($value) && Str::startsWith($value, 'not:')) {
             $type = last(explode('not:', $value));
 
             if ($type === 'string') {
@@ -127,7 +97,7 @@ class Expectations
         }
         $field = preg_replace('/\.\*/', 0, $field);
 
-        Arr::set($this->input, $field, $value);
+        Arr::set($this->with, $field, $value);
 
         return $this;
     }
@@ -151,7 +121,7 @@ class Expectations
             $field = preg_replace('/\.\*/', '.0', $field);
         }
 
-        Arr::forget($this->input, $field);
+        $this->without[] = $field;
         $this->buildExpectationName('without', $field);
 
         return $this;
@@ -166,11 +136,28 @@ class Expectations
         $this->buildExpectationName($shouldPass ? 'should pass'
             : 'should fail');
 
+        $with = $this->with;
+        $without = $this->without;
+
+        $expectation = function (array $input, TestCase $test) use ($shouldPass, $with, $without) {
+            foreach ($without as $field) {
+                Arr::forget($input, $field);
+            }
+
+            foreach ($with as $fied => $value) {
+                $input[$fied] = $value instanceof Closure ? $value($test) : $value;
+            }
+
+            return new Expectation($input, $shouldPass);
+        };
+
         $dataSet = [
-            $this->expectationName => new Expectation($this->input, $shouldPass),
+            trim($this->expectationName) => [$expectation],
         ];
-        $this->expectationName = null;
-        $this->input = $this->originalInput;
+
+        $this->expectationName = '';
+        $this->with = [];
+        $this->without = [];
 
         return $dataSet;
     }
@@ -193,35 +180,5 @@ class Expectations
     public function shouldFail(): array
     {
         return $this->setExpectation(false);
-    }
-
-    /**
-     * Get original input.
-     *
-     * @param  string|null  $field
-     * @return mixed
-     */
-    public function originalInput(string $field = null)
-    {
-        if ($field) {
-            return Arr::get($this->originalInput, $field);
-        }
-
-        return $this->originalInput;
-    }
-
-    /**
-     * Get mutated input.
-     *
-     * @param  string|null  $field
-     * @return mixed
-     */
-    public function input(string $field = null)
-    {
-        if ($field) {
-            return Arr::get($this->input, $field);
-        }
-
-        return $this->input;
     }
 }
