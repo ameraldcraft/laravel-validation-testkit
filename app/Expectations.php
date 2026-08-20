@@ -157,9 +157,10 @@ class Expectations
 
     /**
      * @param  bool  $shouldPass
+     * @param  string|null  $reason
      * @return array
      */
-    private function setExpectation(bool $shouldPass): array
+    private function setExpectation(bool $shouldPass, ?string $reason = null): array
     {
         $this->buildExpectationName($shouldPass ? self::EXPECTATION_SHOULD_PASS : self::EXPECTATION_SHOULD_FAIL);
 
@@ -182,6 +183,10 @@ class Expectations
             return new Expectation($input, $shouldPass);
         };
 
+        if ($reason) {
+            $this->expectationName .= Str::lower(" ($reason)");
+        }
+
         $dataSet = [
             trim($this->expectationName) => [$expectation],
         ];
@@ -196,20 +201,22 @@ class Expectations
     /**
      * Indicate that the validation should pass.
      *
+     * @param  string|null  $reason
      * @return array
      */
-    public function shouldPass(): array
+    public function shouldPass(?string $reason = null): array
     {
-        return $this->setExpectation(true);
+        return $this->setExpectation(true, $reason);
     }
 
     /**
      * Indicate that the validation should fail.
      *
+     * @param  string|null  $reason
      * @return array
      */
-    public function shouldFail(): array
+    public function shouldFail(?string $reason = null): array
     {
-        return $this->setExpectation(false);
+        return $this->setExpectation(false, $reason);
     }
 }
