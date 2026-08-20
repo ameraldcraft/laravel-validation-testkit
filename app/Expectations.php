@@ -73,7 +73,7 @@ class Expectations
          * Very convenient for failure tests.
          * $payload->with('name', 'not:string')->shouldFail()
          */
-        if (!is_callable($value) && Str::startsWith($value, 'not:')) {
+        if (is_string($value) && Str::startsWith($value, 'not:')) {
             $type = last(explode('not:', $value));
 
             if ($type === 'string') {
