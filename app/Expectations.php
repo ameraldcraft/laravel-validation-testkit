@@ -52,7 +52,7 @@ class Expectations
      * @param  string|null  $field
      * @param  mixed|null  $value
      */
-    private function buildExpectationName(string $modifier, string $field = null, $value = null)
+    private function buildExpectationName(string $modifier, ?string $field = null, mixed $value = null)
     {
         if (in_array($modifier, ['with', 'without'])) {
             if (Str::contains($this->expectationName ?? '', $modifier)) {
