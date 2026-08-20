@@ -9,11 +9,27 @@ use Tests\TestCase;
 
 class Expectations
 {
+    private Closure|null $setup = null;
+
     private array $with = [];
 
     private array $without = [];
 
     private string $expectationName = '';
+
+    /**
+     * Perform any necessary setup actions before request is resolved,
+     * e.g., set route resolver for route parameters.
+     *
+     * @param Closure $setup
+     * @return self
+     */
+    public function setup(Closure $setup): self
+    {
+        $this->setup = $setup;
+
+        return $this;
+    }
 
     /**
      * Automatically build expectation name based on fluent method names.
@@ -136,10 +152,14 @@ class Expectations
         $this->buildExpectationName($shouldPass ? 'should pass'
             : 'should fail');
 
+        $setup = $this->setup;
         $with = $this->with;
         $without = $this->without;
 
-        $expectation = function (array $input, TestCase $test) use ($shouldPass, $with, $without) {
+        $expectation = function (array $input, TestCase $test) use ($shouldPass, $setup, $with, $without) {
+
+            $setup !== null ? $setup($test) : null;
+
             foreach ($without as $field) {
                 Arr::forget($input, $field);
             }
