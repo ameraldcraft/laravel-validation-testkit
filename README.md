@@ -86,9 +86,6 @@ class StoreUserTest extends TestCase
     protected function expectations(Expectations $request): array
     {
         return [
-            // Check if validation passes when all fields are present  
-            $request->shouldPass(),
-            
             // Required/optional
             $request->without('first_name')->shouldFail(),
             $request->without('last_name')->shouldFail(),
@@ -114,6 +111,10 @@ class StoreUserTest extends TestCase
                 
             // Expectations are chainable
             $request->without('addresses')->without('addresses.*.country')->shouldPass(),
+
+            // It is possible to perform setup actions before the request is resolved.
+            // Failure/success reason may be specified.
+            $request->setup(fn() => Route::setRouteResolver())->without('first_name')->shouldFail('target model is not eligible'),
         ];
     }
 }
