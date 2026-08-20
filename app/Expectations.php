@@ -9,6 +9,9 @@ use Tests\TestCase;
 
 class Expectations
 {
+    private const string EXPECTATION_SHOULD_PASS = 'should pass';
+    private const string EXPECTATION_SHOULD_FAIL = 'should fail';
+
     private Closure|null $setup = null;
 
     private array $with = [];
@@ -37,13 +40,13 @@ class Expectations
      * Examples:
      *
      * $request->with('name', 'John')->shouldPass() // will turn into
-     * Request with 'name' field equal to 'John' should pass
+     * request with data set "with 'name' field equal to 'John' should pass"
      *
      * $request->without('last_name')->shouldFail() // will turn into
-     * Request without 'last_name' field should fail
+     * request with data set "without 'last_name' field should fail"
      *
      * $request->with('fist_name', 'John')->without('last_name')->shouldPass() // will turn into
-     * Request with 'first_name' field equal to 'John' and without 'last_name' field should pass
+     * request with data set "with first_name' field equal to 'John' and without 'last_name' field should pass"
      *
      * @param  string  $modifier
      * @param  string|null  $field
@@ -72,6 +75,15 @@ class Expectations
             }
 
             $this->expectationName .= " equal to '" . Str::lower($value) . "'";
+        }
+
+        $isInputUnchanged = in_array(trim($this->expectationName), [
+            self::EXPECTATION_SHOULD_PASS,
+            self::EXPECTATION_SHOULD_FAIL
+        ]);
+
+        if ($isInputUnchanged) {
+            $this->expectationName = 'entire input' . $this->expectationName;
         }
     }
 
@@ -149,8 +161,7 @@ class Expectations
      */
     private function setExpectation(bool $shouldPass): array
     {
-        $this->buildExpectationName($shouldPass ? 'should pass'
-            : 'should fail');
+        $this->buildExpectationName($shouldPass ? self::EXPECTATION_SHOULD_PASS : self::EXPECTATION_SHOULD_FAIL);
 
         $setup = $this->setup;
         $with = $this->with;

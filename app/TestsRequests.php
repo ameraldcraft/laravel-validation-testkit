@@ -48,9 +48,13 @@ trait TestsRequests
     {
         $request = new Expectations();
         $expectations = [];
+        $requestExpectations = [
+            ...[$request->shouldPass()],
+            ...static::expectations($request),
+        ];
 
         /** @var array $expectation */
-        foreach (static::expectations($request) as $expectation) {
+        foreach ($requestExpectations as $expectation) {
             $name = array_keys($expectation)[0];
             $expectation = array_values($expectation)[0];
             $expectations[$name] = $expectation;
